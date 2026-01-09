@@ -335,4 +335,80 @@ private:
   index_type offset_{};
   index_type scaling_{};
 };
+
+struct SpyIndex {
+  int val;
+  constexpr SpyIndex(int v) : val(v) {}
+  constexpr operator int() const noexcept { return val; }
+};
+
+class strict_cast_layout {
+public:
+  template <class Extents>
+  class mapping;
+};
+
+template <class Extents>
+class strict_cast_layout::mapping {
+public:
+  using extents_type = Extents;
+  using index_type   = typename extents_type::index_type;
+  using size_type    = typename extents_type::size_type;
+  using rank_type    = typename extents_type::rank_type;
+  using layout_type  = strict_cast_layout;
+
+  constexpr mapping() noexcept               = default;
+  constexpr mapping(const mapping&) noexcept = default;
+  constexpr mapping(const extents_type& ext) noexcept : extents_(ext) {}
+
+  template <class OtherExtents>
+  constexpr mapping(const mapping<OtherExtents>& other) noexcept : extents_(other.extents()) {}
+
+  constexpr mapping& operator=(const mapping&) noexcept = default;
+
+  constexpr const extents_type& extents() const noexcept { return extents_; }
+
+  constexpr index_type required_span_size() const noexcept {
+    index_type size = 1;
+    for (rank_type r = 0; r < extents_type::rank(); r++)
+      size *= extents_.extent(r);
+    return size;
+  }
+
+  template <std::integral... Indices>
+    requires(sizeof...(Indices) == extents_type::rank())
+  constexpr index_type operator()(Indices... idx) const noexcept {
+    return [&]<size_t... _Is>(std::index_sequence<_Is...>) {
+      index_type res = 0;
+      std::array<index_type, sizeof...(Indices)> idx_arr{static_cast<index_type>(idx)...};
+      ((res = res * extents_.extent(_Is) + idx_arr[_Is]), ...);
+      return res;
+    }(std::make_index_sequence<sizeof...(Indices)>{});
+  }
+
+  constexpr index_type operator()(SpyIndex) const noexcept = delete;
+
+  static constexpr bool is_always_unique() noexcept { return true; }
+  static constexpr bool is_always_exhaustive() noexcept { return true; }
+  static constexpr bool is_always_strided() noexcept { return true; }
+
+  static constexpr bool is_unique() noexcept { return true; }
+  static constexpr bool is_exhaustive() noexcept { return true; }
+  static constexpr bool is_strided() noexcept { return true; }
+
+  constexpr index_type stride(rank_type r) const noexcept {
+    index_type s = 1;
+    for (rank_type i = r + 1; i < extents_type::rank(); i++)
+      s *= extents_.extent(i);
+    return s;
+  }
+
+  friend constexpr bool operator==(const mapping& lhs, const mapping& rhs) noexcept {
+    return lhs.extents_ == rhs.extents_;
+  }
+
+private:
+  extents_type extents_{};
+};
+
 #endif // TEST_STD_CONTAINERS_VIEWS_MDSPAN_CUSTOM_TEST_LAYOUTS_H

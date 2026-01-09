@@ -28,6 +28,10 @@ void test() {
   std::span sp{arr};
   mdsp[sp]; // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
 
+  mdsp.at(0, 1); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+  mdsp.at(arr);  // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+  mdsp.at(sp);   // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+
   mdsp.rank();           // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   mdsp.rank_dynamic();   // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   mdsp.static_extent(0); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
