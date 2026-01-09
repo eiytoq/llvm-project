@@ -28,9 +28,11 @@ void test() {
   std::span sp{arr};
   mdsp[sp]; // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
 
+#if _LIBCPP_STD_VER >= 26
   mdsp.at(0, 1); // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   mdsp.at(arr);  // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   mdsp.at(sp);   // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
+#endif
 
   mdsp.rank();           // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
   mdsp.rank_dynamic();   // expected-warning {{ignoring return value of function declared with 'nodiscard' attribute}}
