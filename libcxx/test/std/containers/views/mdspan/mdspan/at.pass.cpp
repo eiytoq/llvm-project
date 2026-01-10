@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// UNSUPPORTED: c++03, c++11, c++14, c++17, c++20, c++23
+// REQUIRES: std-at-least-c++26
 
 // <mdspan>
 
@@ -31,9 +31,7 @@
 #include <cassert>
 #include <mdspan>
 #include <span> // dynamic_extent
-#ifndef TEST_HAS_NO_EXCEPTIONS
-#  include <vector>
-#endif
+#include <vector>
 
 #include "test_macros.h"
 
@@ -62,20 +60,21 @@ constexpr void iterate(MDS mds, Args... args) {
   constexpr int r = static_cast<int>(MDS::extents_type::rank()) - 1 - static_cast<int>(sizeof...(Args));
 
   if constexpr (r == -1) {
-    [[maybe_unused]] int* ptr_accessor = &(mds.accessor().access(mds.data_handle(), mds.mapping()(args...)));
+    std::same_as<typename MDS::reference> decltype(auto) ptr_accessor =
+        mds.accessor().access(mds.data_handle(), mds.mapping()(args...));
     std::array<typename MDS::index_type, MDS::rank()> args_arr{static_cast<typename MDS::index_type>(args)...};
 
     // mdspan.at(indices...)
-    [[maybe_unused]] typename MDS::element_type* ptr_at = &mds.at(args...);
-    assert(ptr_at == ptr_accessor);
+    std::same_as<typename MDS::reference> decltype(auto) ptr_at = mds.at(args...);
+    assert(&ptr_at == &ptr_accessor);
 
     //  mdspan.at(array)
-    [[maybe_unused]] typename MDS::element_type* ptr_arr = &mds.at(args_arr);
-    assert(&mds.at(args_arr) == ptr_accessor);
+    std::same_as<typename MDS::reference> decltype(auto) ptr_arr = mds.at(args_arr);
+    assert(&ptr_arr == &ptr_accessor);
 
     // mdspan.at(span)
-    [[maybe_unused]] typename MDS::element_type* ptr_span = &mds.at(std::span(args_arr));
-    assert(ptr_span == ptr_accessor);
+    std::same_as<typename MDS::reference> decltype(auto) ptr_span = mds.at(std::span(args_arr));
+    assert(&ptr_span == &ptr_accessor);
 
   } else {
     for (typename MDS::index_type i = 0; i < mds.extents().extent(r); i++) {
@@ -155,32 +154,32 @@ constexpr void test_layout() {
         std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::array{IntConfig<t, t, t, t>(0)}));
 
     {
-      [[maybe_unused]] std::array idx{IntConfig<o, o, t, t>(0)};
+      std::array idx{IntConfig<o, o, t, t>(0)};
       assert(!check_at_constraints(
           std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
     }
     {
-      [[maybe_unused]] std::array idx{IntConfig<o, t, t, t>(0)};
+      std::array idx{IntConfig<o, t, t, t>(0)};
       assert(!check_at_constraints(
           std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
     }
     {
-      [[maybe_unused]] std::array idx{IntConfig<t, o, o, t>(0)};
+      std::array idx{IntConfig<t, o, o, t>(0)};
       assert(!check_at_constraints(
           std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
     }
     {
-      [[maybe_unused]] std::array idx{IntConfig<t, t, o, t>(0)};
+      std::array idx{IntConfig<t, t, o, t>(0)};
       assert(!check_at_constraints(
           std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
     }
     {
-      [[maybe_unused]] std::array idx{IntConfig<t, o, t, o>(0)};
+      std::array idx{IntConfig<t, o, t, o>(0)};
       assert(check_at_constraints(
           std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
     }
     {
-      [[maybe_unused]] std::array idx{IntConfig<t, t, t, t>(0)};
+      std::array idx{IntConfig<t, t, t, t>(0)};
       assert(check_at_constraints(
           std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
     }
@@ -198,7 +197,7 @@ constexpr bool test_index_casting() {
   using MDS = std::mdspan<int, std::dextents<int, 1>, strict_cast_layout>;
 
   int data[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  MDS m(data, std::dextents<int, 1>(10));
+  const MDS m{data, std::dextents<int, 1>(10)};
 
   SpyIndex idx_val(3);
 
@@ -207,7 +206,7 @@ constexpr bool test_index_casting() {
   }
 
   {
-    [[maybe_unused]] std::array<SpyIndex, 1> indices{idx_val};
+    std::array<SpyIndex, 1> indices{idx_val};
     assert(&m.at(indices) == &data[3]);
   }
 

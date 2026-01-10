@@ -40,9 +40,7 @@
 #include <__utility/integer_sequence.h>
 #include <array>
 #include <span>
-#if _LIBCPP_STD_VER >= 26
-#  include <stdexcept>
-#endif
+#include <stdexcept>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -305,7 +303,7 @@ private:
   friend class mdspan;
 
 #  if _LIBCPP_STD_VER >= 26
-  [[noreturn]] _LIBCPP_HIDE_FROM_ABI void __throw_out_of_range() const { std::__throw_out_of_range("mdspan"); }
+  _LIBCPP_HIDE_FROM_ABI void __throw_out_of_range() const { std::__throw_out_of_range("mdspan"); }
 #  endif
 };
 
