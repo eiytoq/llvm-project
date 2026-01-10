@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <limits>
 #include <numeric>
+#include <type_traits>
 
 #include "test_macros.h"
 
