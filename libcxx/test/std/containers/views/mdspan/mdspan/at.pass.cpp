@@ -20,12 +20,12 @@
 //   constexpr reference at(const array<OtherIndexType, rank()>& indices) const;
 //
 // Constraints:
-//   * sizeof...(OtherIndexTypes) == extents_type::rank() is true,
-//   * (is_convertible_v<OtherIndexTypes, index_type> && ...) is true,
-//   * (is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) is true.
+//   - sizeof...(OtherIndexTypes) == extents_type::rank() is true,
+//   - (is_convertible_v<OtherIndexTypes, index_type> && ...) is true,
+//   - (is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) is true.
 //
 // Throws:
-//   * std::out_of_range if extents_type::index-cast(indices) is not a multidimensional index in extents_.
+//   - std::out_of_range if extents_type::index-cast(indices) is not a multidimensional index in extents_.
 
 #include <array>
 #include <cassert>
@@ -93,95 +93,94 @@ constexpr void test_iteration(Mapping m) {
 
 template <class Layout>
 constexpr void test_layout() {
-  constexpr size_t D = std::dynamic_extent;
-  test_iteration(construct_mapping(Layout(), std::extents<int>()));
-  test_iteration(construct_mapping(Layout(), std::extents<unsigned, D>(1)));
-  test_iteration(construct_mapping(Layout(), std::extents<unsigned, D>(7)));
-  test_iteration(construct_mapping(Layout(), std::extents<unsigned, 7>()));
-  test_iteration(construct_mapping(Layout(), std::extents<unsigned, 7, 8>()));
-  test_iteration(construct_mapping(Layout(), std::extents<signed char, D, D, D, D>(1, 1, 1, 1)));
+  test_iteration(construct_mapping(Layout{}, std::extents<int>{}));
+  test_iteration(construct_mapping(Layout{}, std::dextents<unsigned, 1>{1}));
+  test_iteration(construct_mapping(Layout{}, std::dextents<unsigned, 1>{7}));
+  test_iteration(construct_mapping(Layout{}, std::extents<unsigned, 7>{}));
+  test_iteration(construct_mapping(Layout{}, std::extents<unsigned, 7, 8>{}));
+  test_iteration(construct_mapping(Layout{}, std::dextents<signed char, 4>{1, 1, 1, 1}));
 
   int data[1];
   // Check at constraint for number of arguments
-  static_assert(check_at_constraints(std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), 0));
-  static_assert(!check_at_constraints(std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), 0, 0));
+  static_assert(check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, 0));
+  static_assert(!check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, 0, 0));
 
   // Check at constraint for convertibility of arguments to index_type
   static_assert(
-      check_at_constraints(std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), IntType(0)));
+      check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, IntType{0}));
   static_assert(
-      !check_at_constraints(std::mdspan(data, construct_mapping(Layout(), std::extents<unsigned, D>(1))), IntType(0)));
+      !check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<unsigned, 1>{1})}, IntType{0}));
 
   // Check at constraint for no-throw-constructibility of index_type from arguments
   static_assert(!check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<unsigned char, D>(1))), IntType(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<unsigned char, 1>{1})}, IntType{0}));
 
   // Check that mixed integrals work: note the second one tests that mdspan casts: layout_wrapping_integral does not accept IntType
   static_assert(check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<unsigned char, D, D>(1, 1))), int(0), size_t(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<unsigned char, 2>{1, 1})}, 0, 0uz));
   static_assert(check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<int, D, D>(1, 1))), 0uz, IntType(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 2>{1, 1})}, 0u, IntType{0}));
 
   constexpr bool t = true;
   constexpr bool o = false;
   static_assert(!check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<int, D, D>(1, 1))), 0uz, IntConfig<o, o, t, t>(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 2>{1, 1})}, 0uz, IntConfig<o, o, t, t>{0}));
   static_assert(check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<int, D, D>(1, 1))), 0uz, IntConfig<o, t, t, t>(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 2>{1, 1})}, 0uz, IntConfig<o, t, t, t>{0}));
   static_assert(check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<int, D, D>(1, 1))), 0uz, IntConfig<o, t, o, t>(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 2>{1, 1})}, 0uz, IntConfig<o, t, o, t>{0}));
   static_assert(!check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<int, D, D>(1, 1))), 0uz, IntConfig<t, o, o, t>(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 2>{1, 1})}, 0uz, IntConfig<t, o, o, t>{0}));
   static_assert(check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<int, D, D>(1, 1))), 0uz, IntConfig<t, o, t, o>(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 2>{1, 1})}, 0uz, IntConfig<t, o, t, o>{0}));
   static_assert(check_at_constraints(
-      std::mdspan(data, construct_mapping(Layout(), std::extents<int, D, D>(1, 1))), 0uz, IntConfig<t, t, t, t>(0)));
+      std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 2>{1, 1})}, 0uz, IntConfig<t, t, t, t>{0}));
 
   // layout_wrapped wouldn't quite work here the way we wrote the check
   // IntConfig has configurable conversion properties: convert from const&, convert from non-const, no-throw-ctor from const&, no-throw-ctor from non-const
   if constexpr (std::is_same_v<Layout, std::layout_left>) {
-    static_assert(!check_at_constraints(
-        std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::array{IntConfig<o, o, t, t>(0)}));
-    static_assert(!check_at_constraints(
-        std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::array{IntConfig<o, t, t, t>(0)}));
-    static_assert(!check_at_constraints(
-        std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::array{IntConfig<t, o, o, t>(0)}));
-    static_assert(!check_at_constraints(
-        std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::array{IntConfig<t, t, o, t>(0)}));
-    static_assert(check_at_constraints(
-        std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::array{IntConfig<t, o, t, o>(0)}));
-    static_assert(check_at_constraints(
-        std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::array{IntConfig<t, t, t, t>(0)}));
+    static_assert(!check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})},
+                                        std::array{IntConfig<o, o, t, t>{0}}));
+    static_assert(!check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})},
+                                        std::array{IntConfig<o, t, t, t>{0}}));
+    static_assert(!check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})},
+                                        std::array{IntConfig<t, o, o, t>{0}}));
+    static_assert(!check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})},
+                                        std::array{IntConfig<t, t, o, t>{0}}));
+    static_assert(check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})},
+                                       std::array{IntConfig<t, o, t, o>{0}}));
+    static_assert(check_at_constraints(std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})},
+                                       std::array{IntConfig<t, t, t, t>{0}}));
 
     {
-      std::array idx{IntConfig<o, o, t, t>(0)};
+      std::array idx{IntConfig<o, o, t, t>{0}};
       assert(!check_at_constraints(
-          std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
+          std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, std::span{idx}));
     }
     {
-      std::array idx{IntConfig<o, t, t, t>(0)};
+      std::array idx{IntConfig<o, t, t, t>{0}};
       assert(!check_at_constraints(
-          std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
+          std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, std::span{idx}));
     }
     {
-      std::array idx{IntConfig<t, o, o, t>(0)};
+      std::array idx{IntConfig<t, o, o, t>{0}};
       assert(!check_at_constraints(
-          std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
+          std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, std::span{idx}));
     }
     {
-      std::array idx{IntConfig<t, t, o, t>(0)};
+      std::array idx{IntConfig<t, t, o, t>{0}};
       assert(!check_at_constraints(
-          std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
+          std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, std::span{idx}));
     }
     {
-      std::array idx{IntConfig<t, o, t, o>(0)};
+      std::array idx{IntConfig<t, o, t, o>{0}};
       assert(check_at_constraints(
-          std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
+          std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, std::span{idx}));
     }
     {
-      std::array idx{IntConfig<t, t, t, t>(0)};
+      std::array idx{IntConfig<t, t, t, t>{0}};
       assert(check_at_constraints(
-          std::mdspan(data, construct_mapping(Layout(), std::extents<int, D>(1))), std::span(idx)));
+          std::mdspan{data, construct_mapping(Layout{}, std::dextents<int, 1>{1})}, std::span{idx}));
     }
   }
 }
@@ -197,7 +196,7 @@ constexpr bool test_index_casting() {
   using MDS = std::mdspan<int, std::dextents<int, 1>, strict_cast_layout>;
 
   int data[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  const MDS m{data, std::dextents<int, 1>(10)};
+  const MDS m{data, std::dextents<int, 1>{10}};
 
   SpyIndex idx_val(3);
 
@@ -219,7 +218,7 @@ constexpr bool test_index_casting() {
   return true;
 }
 
-void test_exceptions() {
+static void test_exceptions() {
 #ifndef TEST_HAS_NO_EXCEPTIONS
   std::vector<int> data(100);
   std::mdspan m(data.data(), 10, 10);
