@@ -71,7 +71,7 @@ concept has_midpoint = requires(T a, T b) { std::midpoint(a, b); };
 
 static_assert(!has_midpoint<std::nullptr_t>);
 static_assert(!has_midpoint<FuncPtr>);
-static_assert(!has_midpoint<Incomplete*>);
+LIBCPP_STATIC_ASSERT(!has_midpoint<Incomplete*>);
 
 static_assert(!has_midpoint<void*>);
 static_assert(!has_midpoint<const void*>);
