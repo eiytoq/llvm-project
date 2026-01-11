@@ -10,8 +10,8 @@
 
 // <numeric>
 
-// template <class _Float>
-// _Tp midpoint(_Float __a, _Float __b) noexcept
+// template <class _Fp>
+// _Fp midpoint(_Fp __a, _Fp __b) noexcept
 
 #include <cassert>
 #include <cmath>
