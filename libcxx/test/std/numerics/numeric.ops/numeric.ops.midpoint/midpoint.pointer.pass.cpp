@@ -69,23 +69,19 @@ struct Incomplete;
 template <typename T>
 concept has_midpoint = requires(T a, T b) { std::midpoint(a, b); };
 
-static void test_constraints() {
-  static_assert(!has_midpoint<std::nullptr_t>);
-  static_assert(!has_midpoint<FuncPtr>);
-  static_assert(!has_midpoint<Incomplete*>);
+static_assert(!has_midpoint<std::nullptr_t>);
+static_assert(!has_midpoint<FuncPtr>);
+static_assert(!has_midpoint<Incomplete*>);
 
-  static_assert(!has_midpoint<void*>);
-  static_assert(!has_midpoint<const void*>);
-  static_assert(!has_midpoint<volatile void*>);
-  static_assert(!has_midpoint<const volatile void*>);
-}
+static_assert(!has_midpoint<void*>);
+static_assert(!has_midpoint<const void*>);
+static_assert(!has_midpoint<volatile void*>);
+static_assert(!has_midpoint<const volatile void*>);
 
 int main(int, char**) {
   test<char>();
   test<int>();
   test<double>();
-
-  test_constraints();
 
   return 0;
 }

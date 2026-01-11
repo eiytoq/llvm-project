@@ -113,18 +113,14 @@ constexpr bool test() {
 template <typename T>
 concept has_midpoint = requires(T a, T b) { std::midpoint(a, b); };
 
-static void test_constraints() {
-  static_assert(!has_midpoint<bool>);
-  static_assert(!has_midpoint<const bool>);
-  static_assert(!has_midpoint<volatile bool>);
-  static_assert(!has_midpoint<const volatile bool>);
-}
+static_assert(!has_midpoint<bool>);
+static_assert(!has_midpoint<const bool>);
+static_assert(!has_midpoint<volatile bool>);
+static_assert(!has_midpoint<const volatile bool>);
 
 int main(int, char**) {
   test();
   static_assert(test());
-
-  test_constraints();
 
   return 0;
 }
