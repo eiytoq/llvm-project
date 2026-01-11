@@ -16,16 +16,16 @@
 //   - T is an arithmetic type other than bool.
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
-#include <cstdint>
 #include <limits>
 #include <numeric>
-#include <type_traits>
 
 #include "test_macros.h"
+#include "type_algorithms.h"
 
 template <typename T>
-constexpr bool test_signed() {
+constexpr void test_signed() {
   ASSERT_SAME_TYPE(decltype(std::midpoint(T{}, T{})), T);
   ASSERT_NOEXCEPT(std::midpoint(T{}, T{}));
   using limits = std::numeric_limits<T>;
@@ -64,12 +64,10 @@ constexpr bool test_signed() {
 
   assert(std::midpoint(limits::max(), T{-6}) == T{limits::max() / 2 - 2});
   assert(std::midpoint(T{-6}, limits::max()) == T{limits::max() / 2 - 3});
-
-  return true;
 }
 
 template <typename T>
-constexpr bool test_unsigned() {
+constexpr void test_unsigned() {
   ASSERT_SAME_TYPE(decltype(std::midpoint(T{}, T{})), T);
   ASSERT_NOEXCEPT(std::midpoint(T{}, T{}));
 
@@ -97,17 +95,19 @@ constexpr bool test_unsigned() {
 
   assert(std::midpoint(limits::max(), T{6}) == T{half_way + 4});
   assert(std::midpoint(T{6}, limits::max()) == T{half_way + 3});
-
-  return true;
 }
 
-template <typename T>
 constexpr bool test() {
-  if constexpr (std::is_signed_v<T>) {
-    return test_signed<T>();
-  } else {
-    return test_unsigned<T>();
-  }
+  types::for_each(types::integer_types(), []<class T>() {
+    if constexpr (!std::same_as<T, bool>) {
+      if constexpr (std::signed_integral<T>) {
+        test_signed<T>();
+      } else {
+        test_unsigned<T>();
+      }
+    }
+  });
+  return true;
 }
 
 template <typename T>
@@ -121,40 +121,8 @@ static void test_constraints() {
 }
 
 int main(int, char**) {
-  auto test_all = []<typename... Ts>() {
-    static_assert((test<Ts>() && ...));
-    (test<Ts>(), ...);
-  };
-  test_all.operator()<
-      signed char,
-      short,
-      int,
-      long,
-      long long,
-      std::int8_t,
-      std::int16_t,
-      std::int32_t,
-      std::int64_t,
-      std::ptrdiff_t,
-
-      unsigned char,
-      unsigned short,
-      unsigned int,
-      unsigned long,
-      unsigned long long,
-      std::uint8_t,
-      std::uint16_t,
-      std::uint32_t,
-      std::uint64_t,
-      std::size_t,
-
-      char
-#ifndef TEST_HAS_NO_INT128
-      ,
-      __int128_t,
-      __uint128_t
-#endif
-      >();
+  test();
+  static_assert(test());
 
   test_constraints();
 
